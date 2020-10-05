@@ -1,0 +1,44 @@
+C:\Users\juliy\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\193.6494.38\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/MinGW/bin/mingw32-make.exe -DCMAKE_C_COMPILER=C:/MinGW/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/MinGW/bin/g++.exe -G "CodeBlocks - MinGW Makefiles" C:\Users\juliy\CLionProjects\aes-kalyna
+-- The C compiler identification is GNU 8.2.0
+-- The CXX compiler identification is GNU 8.2.0
+-- Check for working C compiler: C:/MinGW/bin/gcc.exe
+-- Check for working C compiler: C:/MinGW/bin/gcc.exe -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: C:/MinGW/bin/g++.exe
+-- Check for working CXX compiler: C:/MinGW/bin/g++.exe -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug/googletest
+[ 11%] Performing download step (git clone) for 'googletest'
+Cloning into 'googletest-src'...
+Note: checking out 'release-1.10.0'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at 703bd9ca Googletest export
+[ 22%] No patch step for 'googletest'
+[ 33%] Performing update step for 'googletest'
+[ 44%] No configure step for 'googletest'
+[ 55%] No build step for 'googletest'
+[ 66%] No install step for 'googletest'
+[ 77%] No test step for 'googletest'
+[ 88%] Completed 'googletest'
+[100%] Built target googletest
+-- Found PythonInterp: C:/Users/juliy/anaconda3/python.exe (found version "3.7.6") 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug

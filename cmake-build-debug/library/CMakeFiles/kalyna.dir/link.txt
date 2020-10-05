@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc libkalyna.a  CMakeFiles/kalyna.dir/kalyna-helpers/tables.cpp.obj CMakeFiles/kalyna.dir/kalyna-helpers/transformations.cpp.obj CMakeFiles/kalyna.dir/src/kalyna.cpp.obj
+C:\MinGW\bin\ranlib.exe libkalyna.a

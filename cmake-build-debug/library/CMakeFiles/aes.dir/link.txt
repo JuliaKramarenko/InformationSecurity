@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc libaes.a  CMakeFiles/aes.dir/aes-helpers/tables.cpp.obj CMakeFiles/aes.dir/aes-helpers/transformations.cpp.obj CMakeFiles/aes.dir/src/aes.cpp.obj
+C:\MinGW\bin\ranlib.exe libaes.a
