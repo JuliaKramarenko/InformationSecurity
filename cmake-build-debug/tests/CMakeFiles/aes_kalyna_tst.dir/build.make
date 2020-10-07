@@ -111,7 +111,6 @@ tests/aes_kalyna_tst.exe: tests/CMakeFiles/aes_kalyna_tst.dir/aes_test.cpp.obj
 tests/aes_kalyna_tst.exe: tests/CMakeFiles/aes_kalyna_tst.dir/kalyna_test.cpp.obj
 tests/aes_kalyna_tst.exe: tests/CMakeFiles/aes_kalyna_tst.dir/main.cpp.obj
 tests/aes_kalyna_tst.exe: tests/CMakeFiles/aes_kalyna_tst.dir/build.make
-tests/aes_kalyna_tst.exe: lib/libgtestd.a
 tests/aes_kalyna_tst.exe: library/libaes.a
 tests/aes_kalyna_tst.exe: library/libkalyna.a
 tests/aes_kalyna_tst.exe: tests/CMakeFiles/aes_kalyna_tst.dir/linklibs.rsp

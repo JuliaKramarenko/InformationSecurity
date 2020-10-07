@@ -1,3 +1,0 @@
-C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug/googletest/CMakeFiles/googletest.dir
-C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug/googletest/CMakeFiles/edit_cache.dir
-C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug/googletest/CMakeFiles/rebuild_cache.dir

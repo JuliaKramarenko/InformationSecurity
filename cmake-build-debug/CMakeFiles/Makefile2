@@ -52,7 +52,6 @@ CMAKE_BINARY_DIR = C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: googletest/googletest-build/all
 all: library/all
 all: executable/all
 all: tests/all
@@ -60,7 +59,6 @@ all: tests/all
 .PHONY : all
 
 # The main recursive "clean" target.
-clean: googletest/googletest-build/clean
 clean: library/clean
 clean: executable/clean
 clean: tests/clean
@@ -68,181 +66,11 @@ clean: tests/clean
 .PHONY : clean
 
 # The main recursive "preinstall" target.
-preinstall: googletest/googletest-build/preinstall
 preinstall: library/preinstall
 preinstall: executable/preinstall
 preinstall: tests/preinstall
 
 .PHONY : preinstall
-
-#=============================================================================
-# Directory level rules for directory googletest/googletest-build
-
-# Recursive "all" directory target.
-googletest/googletest-build/all: googletest/googletest-build/googlemock/all
-
-.PHONY : googletest/googletest-build/all
-
-# Recursive "clean" directory target.
-googletest/googletest-build/clean: googletest/googletest-build/googlemock/clean
-
-.PHONY : googletest/googletest-build/clean
-
-# Recursive "preinstall" directory target.
-googletest/googletest-build/preinstall: googletest/googletest-build/googlemock/preinstall
-
-.PHONY : googletest/googletest-build/preinstall
-
-#=============================================================================
-# Directory level rules for directory googletest/googletest-build/googlemock
-
-# Recursive "all" directory target.
-googletest/googletest-build/googlemock/all: googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/all
-googletest/googletest-build/googlemock/all: googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/all
-googletest/googletest-build/googlemock/all: googletest/googletest-build/googletest/all
-
-.PHONY : googletest/googletest-build/googlemock/all
-
-# Recursive "clean" directory target.
-googletest/googletest-build/googlemock/clean: googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/clean
-googletest/googletest-build/googlemock/clean: googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/clean
-googletest/googletest-build/googlemock/clean: googletest/googletest-build/googletest/clean
-
-.PHONY : googletest/googletest-build/googlemock/clean
-
-# Recursive "preinstall" directory target.
-googletest/googletest-build/googlemock/preinstall: googletest/googletest-build/googletest/preinstall
-
-.PHONY : googletest/googletest-build/googlemock/preinstall
-
-#=============================================================================
-# Target rules for target googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir
-
-# All Build rule for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/all: googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/all
-googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/all: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock_main.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/depend
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock_main.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=13,14 "Built target gmock_main"
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/all
-
-# Build rule for subdir invocation for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 6
-	$(MAKE) -f CMakeFiles\Makefile2 googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 0
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/rule
-
-# Convenience name for target.
-gmock_main: googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/rule
-
-.PHONY : gmock_main
-
-# clean rule for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/clean:
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock_main.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/clean
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock_main.dir/clean
-
-#=============================================================================
-# Target rules for target googletest/googletest-build/googlemock/CMakeFiles/gmock.dir
-
-# All Build rule for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/all: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/depend
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=11,12 "Built target gmock"
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/all
-
-# Build rule for subdir invocation for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 4
-	$(MAKE) -f CMakeFiles\Makefile2 googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 0
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/rule
-
-# Convenience name for target.
-gmock: googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/rule
-
-.PHONY : gmock
-
-# clean rule for target.
-googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/clean:
-	$(MAKE) -f googletest\googletest-build\googlemock\CMakeFiles\gmock.dir\build.make googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/clean
-.PHONY : googletest/googletest-build/googlemock/CMakeFiles/gmock.dir/clean
-
-#=============================================================================
-# Directory level rules for directory googletest/googletest-build/googletest
-
-# Recursive "all" directory target.
-googletest/googletest-build/googletest/all: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-googletest/googletest-build/googletest/all: googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
-
-.PHONY : googletest/googletest-build/googletest/all
-
-# Recursive "clean" directory target.
-googletest/googletest-build/googletest/clean: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/clean
-googletest/googletest-build/googletest/clean: googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean
-
-.PHONY : googletest/googletest-build/googletest/clean
-
-# Recursive "preinstall" directory target.
-googletest/googletest-build/googletest/preinstall:
-
-.PHONY : googletest/googletest-build/googletest/preinstall
-
-#=============================================================================
-# Target rules for target googletest/googletest-build/googletest/CMakeFiles/gtest.dir
-
-# All Build rule for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all:
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest.dir/depend
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=15,16 "Built target gtest"
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-
-# Build rule for subdir invocation for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 2
-	$(MAKE) -f CMakeFiles\Makefile2 googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 0
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest.dir/rule
-
-# Convenience name for target.
-gtest: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/rule
-
-.PHONY : gtest
-
-# clean rule for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest.dir/clean:
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest.dir/clean
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest.dir/clean
-
-#=============================================================================
-# Target rules for target googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir
-
-# All Build rule for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/all: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest_main.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/depend
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest_main.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=17,18 "Built target gtest_main"
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
-
-# Build rule for subdir invocation for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 4
-	$(MAKE) -f CMakeFiles\Makefile2 googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 0
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/rule
-
-# Convenience name for target.
-gtest_main: googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/rule
-
-.PHONY : gtest_main
-
-# clean rule for target.
-googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean:
-	$(MAKE) -f googletest\googletest-build\googletest\CMakeFiles\gtest_main.dir\build.make googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean
-.PHONY : googletest/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean
 
 #=============================================================================
 # Directory level rules for directory library
@@ -298,7 +126,7 @@ library/CMakeFiles/aes.dir/clean:
 library/CMakeFiles/kalyna.dir/all:
 	$(MAKE) -f library\CMakeFiles\kalyna.dir\build.make library/CMakeFiles/kalyna.dir/depend
 	$(MAKE) -f library\CMakeFiles\kalyna.dir\build.make library/CMakeFiles/kalyna.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=19,20,21,22 "Built target kalyna"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles --progress-num=11,12,13,14 "Built target kalyna"
 .PHONY : library/CMakeFiles/kalyna.dir/all
 
 # Build rule for subdir invocation for target.
@@ -386,7 +214,6 @@ tests/preinstall:
 # Target rules for target tests/CMakeFiles/aes_kalyna_tst.dir
 
 # All Build rule for target.
-tests/CMakeFiles/aes_kalyna_tst.dir/all: googletest/googletest-build/googletest/CMakeFiles/gtest.dir/all
 tests/CMakeFiles/aes_kalyna_tst.dir/all: library/CMakeFiles/aes.dir/all
 tests/CMakeFiles/aes_kalyna_tst.dir/all: library/CMakeFiles/kalyna.dir/all
 	$(MAKE) -f tests\CMakeFiles\aes_kalyna_tst.dir\build.make tests/CMakeFiles/aes_kalyna_tst.dir/depend
@@ -396,7 +223,7 @@ tests/CMakeFiles/aes_kalyna_tst.dir/all: library/CMakeFiles/kalyna.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/aes_kalyna_tst.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 14
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 12
 	$(MAKE) -f CMakeFiles\Makefile2 tests/CMakeFiles/aes_kalyna_tst.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\juliy\CLionProjects\aes-kalyna\cmake-build-debug\CMakeFiles 0
 .PHONY : tests/CMakeFiles/aes_kalyna_tst.dir/rule
