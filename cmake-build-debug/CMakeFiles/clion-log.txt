@@ -1,4 +1,0 @@
-C:\Users\juliy\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\193.6494.38\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/MinGW/bin/mingw32-make.exe -DCMAKE_C_COMPILER=C:/MinGW/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/MinGW/bin/g++.exe -G "MinGW Makefiles" C:\Users\juliy\CLionProjects\aes-kalyna
--- Configuring done
--- Generating done
--- Build files have been written to: C:/Users/juliy/CLionProjects/aes-kalyna/cmake-build-debug
