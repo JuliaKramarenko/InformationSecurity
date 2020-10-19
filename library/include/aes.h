@@ -20,6 +20,14 @@ class AES {
 
   uint8_t *DecryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv);
 
+  uint8_t *EncryptOFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen);
+
+  uint8_t *DecryptOFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv);
+
+  uint8_t *EncryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen);
+
+  uint8_t *DecryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv);
+
  private:
   void KeyExpansion(const uint8_t key[], uint8_t w[]) const;
 

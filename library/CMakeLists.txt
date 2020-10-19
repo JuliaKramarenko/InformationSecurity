@@ -4,7 +4,11 @@ add_library(aes
         aes-helpers/transformations.h
         aes-helpers/transformations.cpp
         include/aes.h
-        src/aes.cpp)
+        src/aes.cpp
+        src/rc4.cpp
+        include/rc4.h
+        include/salsa20.h
+        src/salsa20.cpp)
 
 add_library(kalyna
         kalyna-helpers/tables.h
