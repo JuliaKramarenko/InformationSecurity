@@ -4,10 +4,6 @@
 #include <cstdio>
 #include <stddef.h>
 
-/**
- * Return codes for s20_crypt
- */
-
 class Salsa20 {
  public:
   explicit Salsa20(int keylen = 256);
@@ -15,7 +11,6 @@ class Salsa20 {
   bool Encrypt(uint8_t* key, uint8_t nonce[8], uint32_t si, uint8_t* buf, uint32_t buflen);
   bool Decrypt(uint8_t* key, uint8_t nonce[8], uint32_t si, uint8_t* buf, uint32_t buflen);
 
- private:
   uint32_t RotL(uint32_t value, int shift);
   void QuarterRound(uint32_t* y0, uint32_t* y1, uint32_t* y2, uint32_t* y3);
   void RowRound(uint32_t y[16]);

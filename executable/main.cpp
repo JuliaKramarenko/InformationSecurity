@@ -10,9 +10,9 @@
 #include "rc4.h"
 #include "salsa20.h"
 
-#define RUN_AES 0
-#define RUN_KALYNA 0
-#define RUN_RC4 0
+#define RUN_AES 1
+#define RUN_KALYNA 1
+#define RUN_RC4 1
 #define RUN_SALSA20 1
 
 const std::string kTestFileName = "test.bin";
@@ -75,12 +75,10 @@ void Measurement(const int &kBytes=1'000'000) {
   auto const &before_aes = std::chrono::high_resolution_clock::now();
 
   for (size_t test = 0; test < test_runs; test++) {
-    for (int i = 0; i < kBytes; i += BLOCK_BYTES_LENGTH) {
-      unsigned char *out = aes.EncryptOFB(input_data + i, BLOCK_BYTES_LENGTH, key, iv, len);
-      unsigned char *innew = aes.DecryptOFB(out, BLOCK_BYTES_LENGTH, key, iv);
-      assert(!memcmp(innew, input_data + i, BLOCK_BYTES_LENGTH));
+      unsigned char *out = aes.EncryptCTR(input_data , kBytes, key, len);
+      unsigned char *innew = aes.DecryptCTR(out, kBytes, key);
+      assert(!memcmp(innew, input_data, kBytes));
       delete[] out;
-    }
   }
 
   auto const &after_aes = std::chrono::high_resolution_clock::now();
@@ -164,11 +162,9 @@ void Measurement(const int &kBytes=1'000'000) {
   uint8_t n[8] = { 3, 1, 4, 1, 5, 9, 2, 6 };
 
   for (size_t test = 0; test < test_runs; test++) {
-    salsa20.Encrypt(key_salsa, n, 0, input_data, 64);
-    salsa20.Decrypt(key_salsa, n, 0, input_data, 64);
-  }
-  auto const& after_salsa20 = std::chrono::high_resolution_clock::now();
-
+    salsa20.Encrypt(key_salsa, n, 0, input_data, kBytes);
+    salsa20.Decrypt(key_salsa, n, 0, input_data, kBytes);}
+    auto const &after_salsa20 = std::chrono::high_resolution_clock::now();
   printf(
       "Salsa20 on %u bytes took %.6lfs\n",
       kBytes,
@@ -178,7 +174,6 @@ void Measurement(const int &kBytes=1'000'000) {
 #endif //SALSA20
   delete[] input_data;
 }
-
 int main() {
   int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;

@@ -13,6 +13,8 @@ uint32_t GetPaddingLength(uint32_t len, size_t block_bytes_len);
 
 uint8_t *PaddingNulls(uint8_t in[], uint32_t inLen, uint32_t alignLen);
 
+uint8_t *IncrementCtr(uint8_t in[], uint32_t len);
+
 void MixColumns(uint8_t **state);
 
 void MixSingleColumn(uint8_t *r);

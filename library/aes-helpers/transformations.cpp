@@ -2,7 +2,11 @@
 #include "transformations.h"
 
 #include <cstring>
-
+uint8_t *IncrementCtr(uint8_t in[], uint32_t len){
+  for (int i=len-1, carry=1; i>=0 && carry; i--){
+    carry = !++in[i];}
+  return in;
+}
 uint8_t *PaddingNulls(uint8_t in[], uint32_t inLen, uint32_t alignLen) {
   auto *alignIn = new uint8_t[alignLen];
   memcpy(alignIn, in, inLen);
