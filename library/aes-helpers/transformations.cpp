@@ -7,6 +7,7 @@ uint8_t *IncrementCtr(uint8_t in[], uint32_t len){
     carry = !++in[i];}
   return in;
 }
+
 uint8_t *PaddingNulls(uint8_t in[], uint32_t inLen, uint32_t alignLen) {
   auto *alignIn = new uint8_t[alignLen];
   memcpy(alignIn, in, inLen);

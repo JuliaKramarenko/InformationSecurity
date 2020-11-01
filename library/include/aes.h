@@ -16,9 +16,9 @@ class AES {
 
   uint8_t *DecryptCBC(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv);
 
-  uint8_t *EncryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen);
+  uint8_t *EncryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen);
 
-  uint8_t *DecryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv);
+  uint8_t *DecryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[], uint8_t *iv);
 
   uint8_t *EncryptOFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen);
 

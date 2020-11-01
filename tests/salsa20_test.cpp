@@ -33,3 +33,22 @@ TEST(SALSA20, Multiblock_EncryptTest) {
   salsa20.Decrypt(key, n, 0, plain, 256);
   EXPECT_EQ(memcmp(plain, expected, 256), 0);
 }
+TEST(SALSA20, RotL_Test) {
+  Salsa20 salsa20(256);
+  EXPECT_EQ(salsa20.RotL(0xc0a8787e, 5), 0x150f0fd8);
+}
+
+// quarterround function tests
+TEST(SALSA20, QuaterRound_Test) {
+  uint32_t s[4] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000 };
+  Salsa20 salsa20(256);
+  salsa20.QuarterRound(&s[0], &s[1], &s[2], &s[3]);
+//quarterround example 1 word 1
+  EXPECT_EQ(s[0], 0x00000000);
+//quarterround example 1 word 2
+  EXPECT_EQ(s[1], 0x00000000);
+//quarterround example 1 word 3
+  EXPECT_EQ(s[2], 0x00000000);
+//quarterround example 1 word 4
+  EXPECT_EQ(s[3], 0x00000000);
+}

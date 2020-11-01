@@ -1,6 +1,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <ntdef.h>
+#include <iostream>
 
 #include "aes.h"
 #include "transformations.h"
@@ -202,7 +203,7 @@ uint8_t *AES::DecryptCBC(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *i
   return out;
 }
 
-uint8_t *AES::EncryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen) {
+uint8_t *AES::EncryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[], uint8_t *iv, uint32_t &outLen) {
   outLen = GetPaddingLength(inLen, blockBytesLen);
   uint8_t *alignIn = PaddingNulls(in, inLen, outLen);
   auto *out = new uint8_t[outLen];
@@ -214,7 +215,8 @@ uint8_t *AES::EncryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *i
   for (uint32_t i = 0; i < outLen; i += blockBytesLen) {
     EncryptBlock(block, encryptedBlock, roundKeys);
     XorBlocks(alignIn + i, encryptedBlock, out + i, blockBytesLen);
-    memcpy(block, out + i, blockBytesLen);
+    memcpy(block, block+s, blockBytesLen-s);
+    memcpy(block+blockBytesLen-s, out + i, s);
   }
 
   delete[] block;
@@ -225,7 +227,7 @@ uint8_t *AES::EncryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *i
   return out;
 }
 
-uint8_t *AES::DecryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *iv) {
+uint8_t *AES::DecryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[], uint8_t *iv) {
   auto *out = new uint8_t[inLen];
   auto *block = new uint8_t[blockBytesLen];
   auto *encryptedBlock = new uint8_t[blockBytesLen];
@@ -235,7 +237,8 @@ uint8_t *AES::DecryptCFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *i
   for (uint32_t i = 0; i < inLen; i += blockBytesLen) {
     EncryptBlock(block, encryptedBlock, roundKeys);
     XorBlocks(in + i, encryptedBlock, out + i, blockBytesLen);
-    memcpy(block, in + i, blockBytesLen);
+    memcpy(block, block+s, blockBytesLen-s);
+    memcpy(block+blockBytesLen-s, in + i, s);
   }
 
   delete[] block;

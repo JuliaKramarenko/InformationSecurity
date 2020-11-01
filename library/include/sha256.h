@@ -1,0 +1,4 @@
+#ifndef AES_KALYNA_SHA256_H
+#define AES_KALYNA_SHA256_H
+
+#endif //AES_KALYNA_SHA256_H

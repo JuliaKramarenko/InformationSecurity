@@ -10,60 +10,35 @@
 #include "rc4.h"
 #include "salsa20.h"
 
+#define RUN_CIPHER 0
+#define RUN_HASH 1
+
 #define RUN_AES 1
 #define RUN_KALYNA 1
 #define RUN_RC4 1
 #define RUN_SALSA20 1
 
+#define RUN_SHA256 1
+#define RUN_KUPYNA 0
+
 const std::string kTestFileName = "test.bin";
 const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(uint8_t);
+size_t const microseconds_in_a_second = 1000 * 1000;
+size_t constexpr test_runs = 1u << 3u;
 
-inline bool FileExists(const std::string &name) {
-  std::ifstream f(name.c_str());
-  return f.good();
+void Hash_functions(uint8_t input_data[], const int &kBytes){
+#if RUN_SHA256
+
+#endif // SHA-256
+
+#if RUN_KUPYNA
+
+#endif // Kupyna
 }
 
-void GenerateData(const int &kBytes) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> distrib(std::numeric_limits<uint8_t>::min(), std::numeric_limits<uint8_t>::max());
-
-  std::cout << "Starting data generation" << std::endl;
-
-  if (!FileExists(kTestFileName)) {
-    std::ofstream test_file;
-    test_file.open(kTestFileName, std::ios::out | std::ios::binary);
-
-    if (test_file.is_open()) {
-      for (int i = 0; i < kBytes; i++) {
-        test_file << (unsigned char) distrib(gen);
-      }
-      test_file.close();
-    }
-  }
-
-  std::cout << "Data generation finished" << std::endl;
-}
-
-void Measurement(const int &kBytes=1'000'000) {
-  size_t constexpr test_runs = 1u << 3u;
-
-  auto *input_data = new uint8_t[kBytes];
-  if (FileExists(kTestFileName)) {
-    std::ifstream input(kTestFileName.c_str(), std::ios::in | std::ios::binary);
-    if (input.is_open()) {
-      for (int i = 0; i < kBytes; i++) {
-        input >> input_data[i];
-      }
-    }
-  } else {
-    std::cout << "Couldn't find testing file" << std::endl;
-    exit(1);
-  }
-  size_t const microseconds_in_a_second = 1000 * 1000;
-
+void Ciphers (uint8_t input_data[], const int &kBytes){
 #if RUN_AES
-  const int keyLen = 128;
+  const int keyLen = 256;
   AES aes(keyLen);
   unsigned char iv[] =
       {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -75,16 +50,16 @@ void Measurement(const int &kBytes=1'000'000) {
   auto const &before_aes = std::chrono::high_resolution_clock::now();
 
   for (size_t test = 0; test < test_runs; test++) {
-      unsigned char *out = aes.EncryptCTR(input_data , kBytes, key, len);
-      unsigned char *innew = aes.DecryptCTR(out, kBytes, key);
-      assert(!memcmp(innew, input_data, kBytes));
-      delete[] out;
+    unsigned char *out = aes.EncryptCFB(input_data ,6, kBytes, key, iv,len);
+    unsigned char *innew = aes.DecryptCFB(out,6, kBytes, key,iv);
+    assert(!memcmp(innew, input_data, kBytes));
+    delete[] out;
   }
 
   auto const &after_aes = std::chrono::high_resolution_clock::now();
 
   printf(
-      "AES(%u) ECB on %u bytes took %.6lfs\n",
+      "AES(%u) CFB on %u bytes took %.6lfs\n",
       keyLen,
       kBytes,
       static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_aes - before_aes).count())
@@ -150,7 +125,7 @@ void Measurement(const int &kBytes=1'000'000) {
           / static_cast<double>(test_runs * microseconds_in_a_second));
   delete [] enc;
   delete [] dec;
-#endif //RC4
+#endif // RC4
 
 #if RUN_SALSA20
   printf("Start SALSA20\n");
@@ -171,9 +146,62 @@ void Measurement(const int &kBytes=1'000'000) {
       static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_salsa20 - before_salsa20).count())
           / static_cast<double>(test_runs * microseconds_in_a_second));
 
-#endif //SALSA20
+#endif // SALSA20
+}
+
+inline bool FileExists(const std::string &name) {
+  std::ifstream f(name.c_str());
+  return f.good();
+}
+
+void GenerateData(const int &kBytes) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(std::numeric_limits<uint8_t>::min(), std::numeric_limits<uint8_t>::max());
+
+  std::cout << "Starting data generation" << std::endl;
+
+  if (!FileExists(kTestFileName)) {
+    std::ofstream test_file;
+    test_file.open(kTestFileName, std::ios::out | std::ios::binary);
+
+    if (test_file.is_open()) {
+      for (int i = 0; i < kBytes; i++) {
+        test_file << (unsigned char) distrib(gen);
+      }
+      test_file.close();
+    }
+  }
+
+  std::cout << "Data generation finished" << std::endl;
+}
+
+void Measurement(const int &kBytes=1'000'000) {
+
+  auto *input_data = new uint8_t[kBytes];
+  if (FileExists(kTestFileName)) {
+    std::ifstream input(kTestFileName.c_str(), std::ios::in | std::ios::binary);
+    if (input.is_open()) {
+      for (int i = 0; i < kBytes; i++) {
+        input >> input_data[i];
+      }
+    }
+  } else {
+    std::cout << "Couldn't find testing file" << std::endl;
+    exit(1);
+  }
+
+  #if RUN_CIPHER
+    Ciphers(input_data, kBytes);
+  #endif // CIPHER
+
+  #if RUN_HASH
+    Hash_functions(input_data,kBytes);
+  #endif // HASH
+
   delete[] input_data;
 }
+
 int main() {
   int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;
