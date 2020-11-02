@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <cassert>
+#include <sha256.h>
 
 #include "kalyna.h"
 #include "aes.h"
@@ -28,6 +29,19 @@ size_t constexpr test_runs = 1u << 3u;
 
 void Hash_functions(uint8_t input_data[], const int &kBytes){
 #if RUN_SHA256
+  printf("Start SHA-256\n");
+  auto const& before_sha256 = std::chrono::high_resolution_clock::now();
+
+  SHA256 sha256;
+  for (size_t test = 0; test < test_runs; test++) {
+    std::string output = sha256.Hash(input_data,kBytes);
+  }
+  auto const &after_sha256 = std::chrono::high_resolution_clock::now();
+  printf(
+      "Salsa20 on %u bytes took %.6lfs\n",
+      kBytes,
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_sha256 - before_sha256).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
 
 #endif // SHA-256
 
