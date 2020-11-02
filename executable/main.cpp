@@ -4,14 +4,17 @@
 #include <fstream>
 #include <chrono>
 #include <cassert>
-#include <sha256.h>
+#include <tuple>
 
 #include "kalyna.h"
 #include "aes.h"
 #include "rc4.h"
 #include "salsa20.h"
 
-#define RUN_CIPHER 0
+#include "sha256.h"
+#include "kupyna.h"
+
+#define RUN_CIPHER 1
 #define RUN_HASH 1
 
 #define RUN_AES 1
@@ -20,37 +23,139 @@
 #define RUN_SALSA20 1
 
 #define RUN_SHA256 1
-#define RUN_KUPYNA 0
+#define RUN_KUPYNA 1
 
 const std::string kTestFileName = "test.bin";
 const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(uint8_t);
 size_t const microseconds_in_a_second = 1000 * 1000;
 size_t constexpr test_runs = 1u << 3u;
 
-void Hash_functions(uint8_t input_data[], const int &kBytes){
+void generate_messages_internal(int length, std::vector<uint8_t> &buffer, std::vector<std::vector<uint8_t>> &result) {
+  if (buffer.size() == length) {
+    result.push_back(buffer);
+  } else {
+    for (int value = 0; value < 256; value++) {
+      buffer.push_back(value);
+      generate_messages_internal(length, buffer, result);
+      buffer.pop_back();
+    }
+  }
+}
+
+std::vector<std::vector<uint8_t>> generate_messages(int length) {
+  std::vector<std::vector<uint8_t>> result;
+  std::vector<uint8_t> buffer;
+  generate_messages_internal(length, buffer, result);
+  return result;
+}
+
+std::string ProofOfWork(SHA256 &sha256, const int length, const uint8_t kZeroBytes) {
+  std::string tail_bytes(kZeroBytes, '0');
+  const auto messages = generate_messages(length);
+  std::string result = "";
+  for (const auto &item : messages) {
+    auto *message = new uint8_t[item.size()];
+    for (size_t i = 0; i < item.size(); i++) {
+      message[i] = item[i];
+    }
+
+    std::string output = sha256.Hash(message, sizeof(message));
+    delete[] message;
+
+    if (output.size() > kZeroBytes && output.substr(output.size() - kZeroBytes) == tail_bytes) {
+      result = output;
+      break;
+    }
+  }
+  return result;
+}
+
+uint8_t *ProofOfWork(Kupyna kupyna, const int length, const uint8_t kZeroBytes) {
+  const auto messages = generate_messages(length);
+  uint8_t *result = nullptr;
+
+  auto CheckZeros = [](const uint8_t *buffer, const size_t buffer_size) -> bool {
+    for (size_t i = 0; i < buffer_size; i++) {
+      if (buffer[i]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  for (const auto &item : messages) {
+    auto *message = new uint8_t[item.size()];
+    for (size_t i = 0; i < item.size(); i++) {
+      message[i] = item[i];
+    }
+
+    uint8_t *output = kupyna.Hash(message, sizeof(message));
+    size_t output_size = kupyna.GetSize();
+    delete[] message;
+
+    if (output_size > kZeroBytes && CheckZeros((output + output_size - kZeroBytes), kZeroBytes)) {
+      result = output;
+      break;
+    }
+  }
+  return result;
+}
+
+void Hash_functions(uint8_t *input_data, const int &kBytes) {
 #if RUN_SHA256
   printf("Start SHA-256\n");
-  auto const& before_sha256 = std::chrono::high_resolution_clock::now();
+  auto const &before_sha256 = std::chrono::high_resolution_clock::now();
 
   SHA256 sha256;
   for (size_t test = 0; test < test_runs; test++) {
-    std::string output = sha256.Hash(input_data,kBytes);
+    std::string output = sha256.Hash(input_data, kBytes);
   }
   auto const &after_sha256 = std::chrono::high_resolution_clock::now();
   printf(
-      "Salsa20 on %u bytes took %.6lfs\n",
+      "SHA-256 on %u bytes took %.6lfs\n",
       kBytes,
       static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_sha256 - before_sha256).count())
           / static_cast<double>(test_runs * microseconds_in_a_second));
-
+  SHA256 sha256pow;
+  auto const &before_sha256_pow = std::chrono::high_resolution_clock::now();
+  std::ignore = ProofOfWork(sha256pow, 3, 2);
+  auto const &after_sha256_pow = std::chrono::high_resolution_clock::now();
+  printf(
+      "POW SHA-256 took %.6lfs\n",
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(
+          after_sha256_pow - before_sha256_pow).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
 #endif // SHA-256
 
 #if RUN_KUPYNA
+  printf("Start Kupyna\n");
+  auto const &before_kupyna = std::chrono::high_resolution_clock::now();
+
+  Kupyna kupyna(256);
+  for (size_t test = 0; test < test_runs; test++) {
+    uint8_t *output = kupyna.Hash(input_data, kBytes);
+  }
+  auto const &after_kupyna = std::chrono::high_resolution_clock::now();
+  printf(
+      "Kupyna on %u bytes took %.6lfs\n",
+      kBytes,
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_kupyna - before_kupyna).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
+
+  Kupyna kupyna_pow(256);
+  auto const &before_kupyna_pow = std::chrono::high_resolution_clock::now();
+  std::ignore = ProofOfWork(kupyna_pow, 3, 2);
+  auto const &after_kupyna_pow = std::chrono::high_resolution_clock::now();
+  printf(
+      "POW Kupyna-256 took %.6lfs\n",
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(
+          after_kupyna_pow - before_kupyna_pow).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
 
 #endif // Kupyna
 }
 
-void Ciphers (uint8_t input_data[], const int &kBytes){
+void Ciphers(uint8_t input_data[], const int &kBytes) {
 #if RUN_AES
   const int keyLen = 256;
   AES aes(keyLen);
@@ -190,7 +295,7 @@ void GenerateData(const int &kBytes) {
   std::cout << "Data generation finished" << std::endl;
 }
 
-void Measurement(const int &kBytes=1'000'000) {
+void Measurement(const int &kBytes = 1'000'000) {
 
   auto *input_data = new uint8_t[kBytes];
   if (FileExists(kTestFileName)) {
@@ -205,13 +310,13 @@ void Measurement(const int &kBytes=1'000'000) {
     exit(1);
   }
 
-  #if RUN_CIPHER
-    Ciphers(input_data, kBytes);
-  #endif // CIPHER
+#if RUN_CIPHER
+  Ciphers(input_data, kBytes);
+#endif // CIPHER
 
-  #if RUN_HASH
-    Hash_functions(input_data,kBytes);
-  #endif // HASH
+#if RUN_HASH
+  Hash_functions(input_data, kBytes);
+#endif // HASH
 
   delete[] input_data;
 }
