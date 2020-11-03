@@ -1,4 +1,5 @@
 #include <stdexcept>
+
 #include "kupyna.h"
 #include "tables.h"
 #include "stdlib.h"
@@ -6,236 +7,250 @@
 #include "stdio.h"
 #include "../kupyna-helpers/tables.h"
 
-Kupyna::Kupyna(int size) {
-  switch (size) {
+Kupyna::Kupyna(size_t b_num)
+{
+  switch (b_num) {
     case 256: {
-      Init(64 / byte_size, 512, 512 / byte_size, 512 / dword_size, 256 / byte_size, 10, 8);
-      break;
-    }
-    case 384: {
-      Init(64 / byte_size, 1024, 1024 / byte_size, 1024 / dword_size, 384 / byte_size, 14, 16);
+      Init(rounds_num_512, b_num_512, state_byte_size_512, b_num);
       break;
     }
     case 512: {
-      Init(64 / byte_size, 1024, 1024 / byte_size, 1024 / dword_size, 512 / byte_size, 14, 16);
+      Init(rounds_num_1024, b_num_1024, state_byte_size_1024, b_num);
       break;
     }
     default: {
-      throw std::invalid_argument("Incorrect size");
+      throw std::invalid_argument("Incorrect number of bits");
     }
   }
 }
 
-uint8_t *Kupyna::Hash(uint8_t *message, size_t blocks) {
-  auto *state = (uint8_t *) malloc(rows_count * state_rows);
-  auto *t1 = (uint8_t *) malloc(rows_count * state_rows);
-  auto *t2 = (uint8_t *) malloc(rows_count * state_rows);
-  uint8_t *cur_msg;
+void Kupyna::Hash(uint8_t * msg, size_t msg_bit_len, uint8_t * hash_code)
+{
+  memset(state, 0, bytes_num);
+  state[0][0] = bytes_num;
 
-  memset(state, 0, rows_count * state_rows);
-
-  ((uint8_t *) &state[0])[0] = 0x80;
-
-  if (block_size == 512) {
-
-    ((uint8_t *) &state[0])[0] >>= 1;
-  }
-
-  for (int i = 0; i < blocks; i++) {
-    cur_msg = message + i * block_dwsize;
-    XORArr(t1, state, cur_msg);
-    memcpy(t2, cur_msg, block_bsize);
-
-    TMapXOR(t1);
-    TMapAdd(t2);
-
-    XORArr(state, state, t1, t2);
-  }
-
-  memcpy(t1, state, block_bsize);
-  TMapXOR(t1);
-  XORArr(state, state, t1);
-
-  auto *out = new uint8_t[message_diggest_bsize];
-  memcpy(out, state, message_diggest_bsize);
-
-  free(state);
-  free(t1);
-  free(t2);
-
-  return out;
+  PadBlock(msg, msg_bit_len);
+  Digest(msg);
+  OutputTransformation(hash_code);
 }
 
-void Kupyna::ToEndian(uint8_t *state, size_t size) {
-  uint8_t tmp[8];
+void Kupyna::Init(const size_t in_rounds, const size_t in_columns, const size_t in_bytes_num, const size_t in_hash_b_num)
+{
+  rounds = in_rounds;
+  columns_count = in_columns;
+  bytes_num = in_bytes_num;
+  hash_b_num = in_hash_b_num;
 
-  for (size_t i = 0; i < size; i++) {
-    uint8_t *state_row = (uint8_t *) &state[i];
-
-    for (size_t j = 0; j < 8; j++) {
-      tmp[7 - j] = state_row[j];
-    }
-
-    state[i] = ((uint8_t *) tmp)[0];
-  }
+  memset(state, 0, bytes_num);
+  state[0][0] = bytes_num;
 }
 
-void Kupyna::Init(size_t msg_bsize,
-                  const size_t blk_size,
-                  const size_t blk_bsize,
-                  size_t blk_dwsize,
-                  const size_t msg_diggest_bsize,
-                  const size_t rnd,
-                  const size_t st_rows) {
-  message_bsize = msg_bsize;
-  block_size = blk_size;
-  block_bsize = blk_bsize;
-  block_dwsize = blk_dwsize;
-  message_diggest_bsize = msg_diggest_bsize;
-  rounds = rnd;
-  state_rows = st_rows;
-}
-
-void Kupyna::TMapXOR(uint8_t *state) {
-  for (size_t i = 0; i < rounds; i++) {
-    XORRoundKey(state, i);
-    SubBytes(state);
-    ShiftRows(state);
-    MixColumns(state);
-  }
-}
-
-void Kupyna::TMapAdd(uint8_t *state) {
-  for (size_t i = 0; i < rounds; i++) {
-    AddRoundKey(state, i);
-    SubBytes(state);
-    ShiftRows(state);
-    MixColumns(state);
-  }
-}
-
-void Kupyna::SubBytes(uint8_t *state) {
-  for (size_t clmn = 0; clmn < state_rows; clmn++) {
-    uint8_t *state_clmn = (uint8_t *) &state[clmn];
-    for (size_t row = 0; row < rows_count; row++) {
-      state_clmn[row] = s_box[row % s_box_dimensions][HighBits(state_clmn[row])][LowBits(state_clmn[row])];
+void Kupyna::SubBytes(uint8_t state[b_num_1024][rows_count], int columns)
+{
+  int i, j;
+  uint8_t temp[b_num_1024];
+  for (i = 0; i < rows_count; ++i) {
+    for (j = 0; j < columns; ++j) {
+      state[j][i] = sboxes_k[i % 4][state[j][i]];
     }
   }
 }
 
-void Kupyna::ShiftRows(uint8_t *state) {
-  size_t i;
-  for (i = 0; i < rows_count - 1; i++) {
-    size_t shift_s = i;
-
-    for (int j = 0; j < shift_s; j++) {
-      uint8_t swp = ((uint8_t *) &state[state_rows - 1])[i];
-
-      for (int k = state_rows - 1; k > 0; k--) {
-        ((uint8_t *) &state[k])[i] = ((uint8_t *) &state[k - 1])[i];
-      }
-
-      ((uint8_t *) &state[0])[i] = swp;
+void Kupyna::ShiftBytes(uint8_t state[b_num_1024][rows_count], int columns)
+{
+  int i, j;
+  uint8_t temp[b_num_1024];
+  int shift = -1;
+  for (i = 0; i < rows_count; ++i) {
+    if ((i == rows_count - 1) && (columns == b_num_1024)) {
+      shift = 11;
+    }
+    else {
+      ++shift;
+    }
+    for (j = 0; j < columns; ++j) {
+      temp[(j + shift) % columns] = state[j][i];
+    }
+    for (j = 0; j < columns; ++j) {
+      state[j][i] = temp[j];
     }
   }
-
-  size_t shift_s = block_size == 512 ? i : 11;
-
-  for (int j = 0; j < shift_s; j++) {
-    uint8_t swp = ((uint8_t *) &state[state_rows - 1])[i];
-
-    for (int k = state_rows - 1; k > 0; k--) {
-      ((uint8_t *) &state[k])[i] = ((uint8_t *) &state[k - 1])[i];
-    }
-
-    ((uint8_t *) &state[0])[i] = swp;
-  }
 }
 
-void Kupyna::MixColumns(uint8_t *state) {
-  MMult(state, mds_matrix_kupyna);
-}
-
-void Kupyna::XORRoundKey(uint8_t *state, size_t round) {
-  for (size_t i = 0; i < state_rows; i++) {
-    ((uint8_t *) &state[i])[0] ^= (i << 4) ^ round;
-  }
-}
-
-void Kupyna::AddRoundKey(uint8_t *state, size_t round) {
-  for (size_t i = 0; i < state_rows; i++) {
-    state[i] += 0x00F0F0F0F0F0F0F3 ^ ((state_rows - i - 1) << 4);
-  }
-}
-
-void Kupyna::XORArr(uint8_t *dest, uint8_t *state, uint8_t *msg) {
-  for (size_t i = 0; i < state_rows; i++) {
-    dest[i] = state[i] ^ msg[i];
-  }
-}
-
-void Kupyna::XORArr(uint8_t *dest, uint8_t *state, uint8_t *t1, uint8_t *t2) {
-  for (size_t i = 0; i < state_rows; i++) {
-    dest[i] = state[i] ^ t1[i] ^ t2[i];
-  }
-}
-
-void Kupyna::MMult(uint8_t *state, const uint8_t mat[8][8]) {
+void Kupyna::MixColumns(uint8_t state[b_num_1024][rows_count], int columns)
+{
+  int i, row, col, b;
   uint8_t product;
-  uint8_t result;
-
-  for (int col = 0; col < state_rows; col++) {
-    result = 0;
-
-    for (int row = rows_count - 1; row >= 0; row--) {
+  uint8_t result[rows_count];
+  for (col = 0; col < columns; ++col) {
+    memset(result, rows_count, 0);
+    for (row = rows_count - 1; row >= 0; --row) {
       product = 0;
-      for (int i = rows_count - 1; i >= 0; i--) {
-        product ^= GFMult(((uint8_t *) &state[col])[i], mat[row][i]);
+      for (b = rows_count - 1; b >= 0; --b) {
+        product ^= GFMult(state[col][b], mds_matrix_k[row][b]);
       }
-
-      result |= (uint8_t) product << (row * rows_count);
+      result[row] = product;
     }
-
-    state[col] = result;
+    for (i = 0; i < rows_count; ++i) {
+      state[col][i] = result[i];
+    }
   }
 }
 
-std::uint8_t Kupyna::GFMult(uint8_t x, uint8_t y) {
+void Kupyna::AddRoundConstantP(uint8_t state[b_num_1024][rows_count], int columns, int round)
+{
+  int i;
+  for (i = 0; i < columns; ++i)
+  {
+    state[i][0] ^= (i * 0x10) ^ round;
+  }
+}
+
+void Kupyna::AddRoundConstantQ(uint8_t state[b_num_1024][rows_count], int columns, int round)
+{
+  int j;
+  uint64_t* s = (uint64_t*)state;
+  for (j = 0; j < columns; ++j)
+  {
+    s[j] = s[j] + (0x00F0F0F0F0F0F0F3ULL ^ ((((columns - j - 1) * 0x10ULL) ^ round) << (7 * 8)));
+  }
+}
+
+void Kupyna::P(uint8_t state[b_num_1024][rows_count])
+{
+  int i;
+  for (i = 0; i < rounds; ++i) {
+    AddRoundConstantP(state, columns_count, i);
+    SubBytes(state, columns_count);
+    ShiftBytes(state, columns_count);
+    MixColumns(state, columns_count);
+  }
+}
+
+void Kupyna::Q(uint8_t state[b_num_1024][rows_count])
+{
+  int i;
+  for (i = 0; i < rounds; ++i) {
+    AddRoundConstantQ(state, columns_count, i);
+    SubBytes(state, columns_count);
+    ShiftBytes(state, columns_count);
+    MixColumns(state, columns_count);
+  }
+}
+
+std::uint8_t Kupyna::GFMult(uint8_t x, uint8_t y)
+{
+  int i;
   uint8_t r = 0;
   uint8_t hbit = 0;
-
-  for (size_t i = 0; i < byte_size; i++) {
-    if ((y & 0x1) == 1) {
+  for (i = 0; i < b_byte_size; ++i) {
+    if ((y & 0x1) == 1)
       r ^= x;
-    }
-
     hbit = x & 0x80;
     x <<= 1;
-
-    if (hbit == 0x80) {
-      x ^= 0x011d;
-    }
-
+    if (hbit == 0x80)
+      x ^= reduction_polinomial;
     y >>= 1;
   }
-
   return r;
 }
 
-void Kupyna::PadBlock(uint8_t *msg_block, uint8_t size) {
-  size_t blk_size = size % block_size;
-  size_t pad_zeros = block_size - blk_size - 96;
-  uint8_t *msg = (uint8_t *) msg_block;
+int Kupyna::PadBlock(uint8_t* msg_block, size_t size)
+{
+  int i;
+  int mask;
+  int pad_bit;
+  int extra_bits;
+  int zero_nbytes;
+  size_t msg_nbytes = size / b_byte_size;
+  size_t nblocks = msg_nbytes / bytes_num;
+  pad_bytes_num = msg_nbytes - (nblocks * bytes_num);
+  data_bytes_num = msg_nbytes - pad_bytes_num;
+  uint8_t* pad_start = msg_block + data_bytes_num;
+  extra_bits = size % b_byte_size;
+  if (extra_bits) {
+    pad_bytes_num += 1;
+  }
+  memcpy(padding, pad_start, pad_bytes_num);
+  extra_bits = size % b_byte_size;
+  if (extra_bits) {
+    mask = ~(0xFF >> (extra_bits));
+    pad_bit = 1 << (7 - extra_bits);
+    padding[pad_bytes_num - 1] = (padding[pad_bytes_num - 1] & mask) | pad_bit;
+  }
+  else {
+    padding[pad_bytes_num] = 0x80;
+    pad_bytes_num += 1;
+  }
+  zero_nbytes = ((-size - 97) % (bytes_num * b_byte_size)) / b_byte_size;
+  memset(padding + pad_bytes_num, 0, zero_nbytes);
+  pad_bytes_num += zero_nbytes;
+  for (i = 0; i < (96 / 8); ++i, ++pad_bytes_num) {
+    if (i < sizeof(size_t)) {
+      padding[pad_bytes_num] = (size >> (i * 8)) & 0xFF;
+    }
+    else {
+      padding[pad_bytes_num] = 0;
+    }
+  }
+  return 0;
+}
 
-  msg[block_size / byte_size] = 0x80;
-  memset(msg + blk_size / byte_size + 1, 0, pad_zeros / byte_size);
+void Kupyna::Digest(uint8_t* msg_block)
+{
+  int b, i, j;
+  uint8_t temp1[b_num_1024][rows_count];
+  uint8_t temp2[b_num_1024][rows_count];
+  for (b = 0; b < data_bytes_num; b += bytes_num) {
+    for (i = 0; i < rows_count; ++i) {
+      for (j = 0; j < columns_count; ++j) {
+        temp1[j][i] = state[j][i] ^ msg_block[b + j * rows_count + i];
+        temp2[j][i] = msg_block[b + j * rows_count + i];
+      }
+    }
+    P(temp1);
+    Q(temp2);
+    for (i = 0; i < rows_count; ++i) {
+      for (j = 0; j < columns_count; ++j) {
+        state[j][i] ^= temp1[j][i] ^ temp2[j][i];
+      }
+    }
+  }
 
-  for (size_t i = 0; i < 12; i++) {
-    if (i < sizeof(uint8_t)) {
-      *(msg + block_bsize - i - 1) = ((uint8_t *) &size)[i];
-    } else {
-      *(msg + block_bsize - i - 1) = 0;
+  for (b = 0; b < pad_bytes_num; b += bytes_num) {
+    for (i = 0; i < rows_count; ++i) {
+      for (j = 0; j < columns_count; ++j) {
+        temp1[j][i] = state[j][i] ^ padding[b + j * rows_count + i];
+        temp2[j][i] = padding[b + j * rows_count + i];
+      }
+    }
+    P(temp1);
+    Q(temp2);
+    for (i = 0; i < rows_count; ++i) {
+      for (j = 0; j < columns_count; ++j) {
+        state[j][i] ^= temp1[j][i] ^ temp2[j][i];
+      }
     }
   }
 }
 
+void Kupyna::Trunc(uint8_t* hash_code)
+{
+  int i;
+  size_t hash_nbytes = hash_b_num / b_byte_size;
+  memcpy(hash_code, (uint8_t*)state + bytes_num - hash_nbytes, hash_nbytes);
+}
+
+void Kupyna::OutputTransformation(uint8_t* hash_code)
+{
+  int i, j;
+  uint8_t temp[b_num_1024][rows_count];
+  memcpy(temp, state, rows_count * b_num_1024);
+  P(temp);
+  for (i = 0; i < rows_count; ++i) {
+    for (j = 0; j < columns_count; ++j) {
+      state[j][i] ^= temp[j][i];
+    }
+  }
+  Trunc(hash_code);
+}

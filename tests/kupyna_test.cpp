@@ -24,8 +24,9 @@ TEST(Kupyna, Hash_Test_256) {
                       0xF6, 0x9D, 0xD5, 0x8D, 0xBE, 0x84, 0x81, 0x3E,
                       0xE0, 0xA5, 0x2F, 0x66, 0x31, 0x23, 0x98, 0x75};
   Kupyna kupyna = Kupyna(256);
-  uint8_t *output = kupyna.Hash(input, sizeof(input));
-  ASSERT_FALSE(memcmp(expected, output, sizeof(expected)));
+  uint8_t hash_code[512 / 8];
+  kupyna.Hash(input, 512, hash_code);
+  ASSERT_FALSE(memcmp(expected, hash_code, sizeof(expected)));
 }
 
 TEST(Kupyna, Hash_Test_8) {
@@ -35,8 +36,9 @@ TEST(Kupyna, Hash_Test_8) {
                        0x05, 0x9E, 0xA6, 0xD0, 0xD7, 0x12, 0x4D, 0x6E,
                        0xCD, 0xB3, 0xDE, 0xEC, 0x49, 0xE8, 0x90, 0xF4};
   Kupyna kupyna = Kupyna(256);
-  uint8_t *output = kupyna.Hash(input, sizeof(input));
-  ASSERT_FALSE(memcmp(expected, output, sizeof(expected)));
+  uint8_t hash_code[512 / 8];
+  kupyna.Hash(input, 8,hash_code);
+  ASSERT_FALSE(memcmp(expected, hash_code, sizeof(expected)));
 }
 
 TEST(Kupyna, Hash_Test_512) {
@@ -61,6 +63,7 @@ TEST(Kupyna, Hash_Test_512) {
                        0x96, 0x35, 0x65, 0x7F, 0x25, 0x6B, 0x15, 0xD5, 0xFC, 0xA4, 0xA1, 0x74, 0xDE, 0x02, 0x9F, 0x0B,
                        0x1B, 0x43, 0x87, 0xC8, 0x78, 0xFC, 0xC1, 0xC0, 0x0E, 0x87, 0x05, 0xD7, 0x83, 0xFD, 0x7F, 0xFE};
   Kupyna kupyna = Kupyna(512);
-  uint8_t *output = kupyna.Hash(input, sizeof(input));
-  ASSERT_FALSE(memcmp(expected, output, sizeof(expected)));
+  uint8_t hash_code[512 / 8];
+  kupyna.Hash(input, 1024, hash_code);
+  ASSERT_FALSE(memcmp(expected, hash_code, sizeof(expected)));
 }

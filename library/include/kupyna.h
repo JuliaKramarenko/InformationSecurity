@@ -3,49 +3,54 @@
 
 #include <cstddef>
 #include <cstdint>
-class Kupyna {
+class Kupyna
+{
  public:
-  explicit Kupyna(int size);
-  uint8_t *Hash(uint8_t *message, size_t blocks);
 
-  size_t GetSize() const { return message_diggest_bsize; }
+  static const size_t rows_count = 8;
+  static const size_t s_box_dimensions = 4;
+
+  static const size_t b_num_512 = 8;
+  static const size_t b_num_1024 = 16;
+  static const size_t rounds_num_512 = 10;
+  static const size_t rounds_num_1024 = 14;
+  static const size_t b_byte_size = 8;
+  static const size_t b_word_size = 64;
+
+  static const size_t state_byte_size_512 = rows_count * b_num_512;
+  static const size_t state_byte_size_1024 = rows_count * b_num_1024;
+
+  static const uint8_t reduction_polinomial = 0x011d;
+
+  Kupyna(size_t b_num);
+  void Hash(uint8_t* msg, size_t msg_bit_len, uint8_t* hash_code);
+//  size_t GetSize() const { return message_diggest_bsize; }
 
  private:
-  const size_t rows_count = 8;
-  const size_t byte_size = 8;
-  const size_t dword_size = 64;
-  const size_t dword_bsize = sizeof(uint8_t);
-  const size_t s_box_dimensions = 4;
+  int columns_count = 0;
+  int rounds = 0;
+  size_t bytes_num = 0;
+  uint8_t state[b_num_1024][rows_count];
+  size_t data_bytes_num = 0;
+  uint8_t padding[state_byte_size_1024 * 2];
+  size_t pad_bytes_num = 0;
+  size_t hash_b_num = 0;
 
-  size_t message_bsize{};
-  size_t block_size{};
-  size_t block_bsize{};
-  size_t block_dwsize{};
-  size_t message_diggest_bsize{};
-  size_t rounds{};
+  void Init(const size_t in_rounds, const size_t in_columns, const size_t in_bytes_num, const size_t in_hash_b_num);
 
-  uint8_t HighBits(uint8_t val) { return (val & 0xF0) >> 4; };
-  uint8_t LowBits(uint8_t val) { return val & 0x0F; };
-
-  void ToEndian(uint8_t *state, size_t size);
-
-  void Init(size_t msg_bsize, const size_t blk_size, const size_t blk_bsize, size_t blk_dwsize,
-            const size_t msg_diggest_bsize, const size_t rnd, const size_t st_rows);
-
-  size_t state_rows{};
-
-  void TMapXOR(uint8_t *state);
-  void TMapAdd(uint8_t *state);
-  void SubBytes(uint8_t *state);
-  void ShiftRows(uint8_t *state);
-  void MixColumns(uint8_t *state);
-  void XORRoundKey(uint8_t *state, size_t round);
-  void AddRoundKey(uint8_t *state, size_t round);
-  void XORArr(uint8_t *dest, uint8_t *state, uint8_t *msg);
-  void XORArr(uint8_t *dest, uint8_t *state, uint8_t *t1, uint8_t *t2);
-  void MMult(uint8_t *state, const uint8_t mat[8][8]);
+  void SubBytes(uint8_t state[b_num_1024][rows_count], int columns);
+  void ShiftBytes(uint8_t state[b_num_1024][rows_count], int columns);
+  void MixColumns(uint8_t state[b_num_1024][rows_count], int columns);
+  void AddRoundConstantP(uint8_t state[b_num_1024][rows_count], int columns, int round);
+  void AddRoundConstantQ(uint8_t state[b_num_1024][rows_count], int columns, int round);
+  void P(uint8_t state[b_num_1024][rows_count]);
+  void Q(uint8_t state[b_num_1024][rows_count]);
   uint8_t GFMult(uint8_t x, uint8_t y);
-  void PadBlock(uint8_t *msg_block, uint8_t size);
+  int PadBlock(uint8_t* msg_block, size_t size);
+  void Digest(uint8_t* msg_block);
+  void Trunc(uint8_t* hash_code);
+  void OutputTransformation(uint8_t* hash_code);
+
 
 };
 
