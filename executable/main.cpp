@@ -69,7 +69,38 @@ std::string ProofOfWork(SHA256 &sha256, const int length, const uint8_t kZeroByt
   }
   return result;
 }
+uint8_t *ProofOfWork(Kupyna kupyna, const int length, const uint8_t kZeroBytes) {
+  const auto messages = generate_messages(length);
+  uint8_t *result = nullptr;
 
+  auto CheckZeros = [](const uint8_t *buffer, const size_t buffer_size) -> bool {
+    for (size_t i = 0; i < buffer_size; i++) {
+      if (buffer[i]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  for (const auto &item : messages) {
+    auto *message = new uint8_t[item.size()];
+    for (size_t i = 0; i < item.size(); i++) {
+      message[i] = item[i];
+    }
+
+    uint8_t hash_code [512 / 8];
+    kupyna.Hash(message, 512, hash_code);
+    uint8_t *output = hash_code;
+    size_t output_size = sizeof(output);
+    delete[] message;
+
+    if (output_size > kZeroBytes && CheckZeros((output + output_size - kZeroBytes), kZeroBytes)) {
+      result = output;
+      break;
+    }
+  }
+  return result;
+}
 void Hash_functions(uint8_t *input_data, const int &kBytes) {
 #if RUN_SHA256
   printf("Start SHA-256\n");
@@ -87,7 +118,7 @@ void Hash_functions(uint8_t *input_data, const int &kBytes) {
           / static_cast<double>(test_runs * microseconds_in_a_second));
   SHA256 sha256pow;
   auto const &before_sha256_pow = std::chrono::high_resolution_clock::now();
-  std::ignore = ProofOfWork(sha256pow, 3, 2);
+  std::ignore = ProofOfWork(sha256pow, 2, 1);
   auto const &after_sha256_pow = std::chrono::high_resolution_clock::now();
   printf(
       "POW SHA-256 took %.6lfs\n",
@@ -110,6 +141,15 @@ void Hash_functions(uint8_t *input_data, const int &kBytes) {
       "Kupyna on %u bytes took %.6lfs\n",
       kBytes,
       static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_kupyna - before_kupyna).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
+  Kupyna kupynaPow(256);
+  auto const &before_kupyna_pow = std::chrono::high_resolution_clock::now();
+  std::ignore = ProofOfWork(kupynaPow, 2, 1);
+  auto const &after_kupyna_pow = std::chrono::high_resolution_clock::now();
+  printf(
+      "POW Kupyna took %.6lfs\n",
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(
+          after_kupyna_pow - before_kupyna_pow).count())
           / static_cast<double>(test_runs * microseconds_in_a_second));
 
 #endif // Kupyna
@@ -284,7 +324,7 @@ void Measurement(const int &kBytes = 1'000'000) {
 int main() {
   int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;
-  GenerateData(kBytesInMegabyte);
-  Measurement(kBytesInMegabyte);
+  GenerateData(kBytesInGigabyte);
+  Measurement(kBytesInGigabyte);
   return 0;
 }
