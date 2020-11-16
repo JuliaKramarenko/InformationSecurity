@@ -5,7 +5,7 @@
 #include <chrono>
 #include <cassert>
 #include <tuple>
-
+#include <gmp.h>
 #include "kalyna.h"
 #include "aes.h"
 #include "rc4.h"
@@ -14,6 +14,9 @@
 #include "sha256.h"
 #include "kupyna.h"
 
+#include "RSA.h"
+
+#define RUN_RSA 1
 #define RUN_CIPHER 0
 #define RUN_HASH 1
 
@@ -22,8 +25,8 @@
 #define RUN_RC4 0
 #define RUN_SALSA20 0
 
-#define RUN_SHA256 1
-#define RUN_KUPYNA 1
+#define RUN_SHA256 0
+#define RUN_KUPYNA 0
 
 const std::string kTestFileName = "test.bin";
 const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(uint8_t);
@@ -88,7 +91,7 @@ uint8_t *ProofOfWork(Kupyna kupyna, const int length, const uint8_t kZeroBytes) 
       message[i] = item[i];
     }
 
-    uint8_t hash_code [512 / 8];
+    uint8_t hash_code[512 / 8];
     kupyna.Hash(message, 512, hash_code);
     uint8_t *output = hash_code;
     size_t output_size = sizeof(output);
@@ -321,10 +324,14 @@ void Measurement(const int &kBytes = 1'000'000) {
   delete[] input_data;
 }
 
+
 int main() {
   int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;
-  GenerateData(kBytesInGigabyte);
-  Measurement(kBytesInGigabyte);
+  GenerateData(kBytesInMegabyte);
+  Measurement(kBytesInMegabyte);
+#if RUN_RSA
+  
+#endif // RSA
   return 0;
 }

@@ -8,7 +8,18 @@ add_library(aes
         src/rc4.cpp
         include/rc4.h
         include/salsa20.h
-        src/salsa20.cpp include/sha256.h src/sha256.cpp src/kupyna.cpp include/kupyna.h kupyna-helpers/tables.cpp kupyna-helpers/tables.h)
+        src/salsa20.cpp
+        include/sha256.h
+        src/sha256.cpp
+        src/kupyna.cpp
+        include/kupyna.h
+        kupyna-helpers/tables.cpp
+        kupyna-helpers/tables.h
+        src/rsa.cpp
+        include/rsa.h
+        rsa-helpers/rsa-helpers.h
+        rsa-helpers/rsa-helpers.cpp
+        )
 
 add_library(kalyna
         kalyna-helpers/tables.h
