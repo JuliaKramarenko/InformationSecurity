@@ -1,11 +1,8 @@
 #include <iostream>
-#include <numeric>
 #include <random>
 #include <fstream>
 #include <chrono>
-#include <cassert>
 #include <tuple>
-
 #include "kalyna.h"
 #include "aes.h"
 #include "rc4.h"
@@ -14,6 +11,10 @@
 #include "sha256.h"
 #include "kupyna.h"
 
+#include "rsa.h"
+#include "helpers.h"
+
+#define RUN_RSA 1
 #define RUN_CIPHER 0
 #define RUN_HASH 1
 
@@ -22,8 +23,8 @@
 #define RUN_RC4 0
 #define RUN_SALSA20 0
 
-#define RUN_SHA256 1
-#define RUN_KUPYNA 1
+#define RUN_SHA256 0
+#define RUN_KUPYNA 0
 
 const std::string kTestFileName = "test.bin";
 const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(uint8_t);
@@ -88,7 +89,7 @@ uint8_t *ProofOfWork(Kupyna kupyna, const int length, const uint8_t kZeroBytes) 
       message[i] = item[i];
     }
 
-    uint8_t hash_code [512 / 8];
+    uint8_t hash_code[512 / 8];
     kupyna.Hash(message, 512, hash_code);
     uint8_t *output = hash_code;
     size_t output_size = sizeof(output);
@@ -322,9 +323,94 @@ void Measurement(const int &kBytes = 1'000'000) {
 }
 
 int main() {
-  int kBytesInGigabyte = 1'000'000'000;
+  /*int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;
-  GenerateData(kBytesInGigabyte);
-  Measurement(kBytesInGigabyte);
+  GenerateData(kBytesInMegabyte);
+  Measurement(kBytesInMegabyte);*/
+#if RUN_RSA
+  printf("Start RSA\n");
+  mpz_t p, q, phi, e, n, d, dp, dq, c, dc;
+  auto const& before_rsa = std::chrono::high_resolution_clock::now();
+
+  const char msg[40] = "welcome to cryptoworld";
+  int len = strlen(msg);
+
+  mpz_init(p);
+  mpz_init(q);
+  mpz_init(phi);
+  mpz_init(e);
+  mpz_init(n);
+  mpz_init(d);
+  mpz_init(dp);
+  mpz_init(dq);
+  mpz_init(c);
+  mpz_init(dc);
+
+  RSA rsa = RSA(128, 128);
+
+   //rsa.Init( p, q, phi, n, d, e);
+  rsa.InitCRT(p, q, phi, n, d, dp, dq, e);
+
+  //----------OAEP------------------------------------------
+  /*// make padding block be block
+  int NumOfBlocks = len / 16 + ((len % 16 == 0) ? 0 : 1);
+  std::string msgSTR(msg);
+  msgSTR.resize(NumOfBlocks * 16, (char) 0);
+  // make class
+  std::string Xarr[NumOfBlocks];
+  std::string Yarr[NumOfBlocks];
+  std::string Harr[NumOfBlocks];
+  std::string Garr[NumOfBlocks];
+
+  for (int i = 0; i < NumOfBlocks; i++) {
+    BlockPaddingOAEP(msgSTR.substr(i * 16, i * 16 + 15), Xarr[i], Yarr[i], Harr[i], Garr[i]);
+  }*/
+//______________________________________________________________________
+  rsa.Encrypt(&e, &n, &d, &c, msg);
+  rsa.DecryptCRT(&dc, &c, &dp, &dq, &p, &q, &n);
+  //rsa.Decrypt(&dc, &c, &d, &n);
+//_________________OAEPP_________________________________________________
+  //revert padding block be block
+  /*std::string RES = "";
+  for (int i = 0; i < NumOfBlocks; i++) {
+    std::string temp;
+    BlockDepaddingOAEP(temp, Xarr[i], Yarr[i], Harr[i], Garr[i]);
+    RES += temp;
+  }*/
+//________________________________________________________________________________
+  //printf("\n------------------------------------------------------------------------------------------\n");
+  //printf("encrypt message  = ");
+  //mpz_out_str(stdout, 10, c);
+  //printf("\n");
+  //printf("\n------------------------------------------------------------------------------------------\n");
+  printf("message as int after decr  = ");
+  mpz_out_str(stdout, 10, dc);
+  printf("\n");
+
+ // char *r = mpz_get_str(nullptr, 16, dc);
+  //printf("message as string after decr  = ");
+ // for (int i = 0; i < strlen(r); i++) {
+   // printf("%c", r[i]);
+  //}
+  printf("\n");
+  auto const &after_rsa = std::chrono::high_resolution_clock::now();
+
+  printf(
+      "RSA took %.6lfs\n",
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_rsa - before_rsa).count() )
+      / static_cast<double>(microseconds_in_a_second));
+
+  mpz_clear(p);
+  mpz_clear(dp);
+  mpz_clear(q);
+  mpz_clear(dq);
+  mpz_clear(phi);
+  mpz_clear(n);
+  mpz_clear(e);
+  mpz_clear(c);
+  mpz_clear(d);
+  mpz_clear(dc);
+#endif // RSA
+  exit(0);
   return 0;
 }

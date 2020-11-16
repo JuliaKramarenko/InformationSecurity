@@ -1,6 +1,6 @@
 #include <cstring>
 #include <stdexcept>
-#include <ntdef.h>
+
 #include <iostream>
 
 #include "aes.h"
@@ -215,8 +215,8 @@ uint8_t *AES::EncryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[]
   for (uint32_t i = 0; i < outLen; i += blockBytesLen) {
     EncryptBlock(block, encryptedBlock, roundKeys);
     XorBlocks(alignIn + i, encryptedBlock, out + i, blockBytesLen);
-    memcpy(block, block+s, blockBytesLen-s);
-    memcpy(block+blockBytesLen-s, out + i, s);
+    memcpy(block, block + s, blockBytesLen - s);
+    memcpy(block + blockBytesLen - s, out + i, s);
   }
 
   delete[] block;
@@ -237,8 +237,8 @@ uint8_t *AES::DecryptCFB(uint8_t in[], uint32_t s, uint32_t inLen, uint8_t key[]
   for (uint32_t i = 0; i < inLen; i += blockBytesLen) {
     EncryptBlock(block, encryptedBlock, roundKeys);
     XorBlocks(in + i, encryptedBlock, out + i, blockBytesLen);
-    memcpy(block, block+s, blockBytesLen-s);
-    memcpy(block+blockBytesLen-s, in + i, s);
+    memcpy(block, block + s, blockBytesLen - s);
+    memcpy(block + blockBytesLen - s, in + i, s);
   }
 
   delete[] block;
@@ -292,10 +292,10 @@ uint8_t *AES::DecryptOFB(uint8_t in[], uint32_t inLen, uint8_t key[], uint8_t *i
 }
 
 uint8_t *AES::EncryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[], uint32_t &outLen) {
-  unsigned char nonce [] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-  unsigned char ctr [] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  unsigned char nc[sizeof(nonce)+sizeof(ctr)];
-  memcpy(nc,nonce,sizeof(nonce));
+  unsigned char nonce[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+  unsigned char ctr[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  unsigned char nc[sizeof(nonce) + sizeof(ctr)];
+  memcpy(nc, nonce, sizeof(nonce));
 
   outLen = GetPaddingLength(inLen, blockBytesLen);
   uint8_t *alignIn = PaddingNulls(in, inLen, outLen);
@@ -305,7 +305,7 @@ uint8_t *AES::EncryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[], uint32_t &
   KeyExpansion(key, roundKeys);
 
   for (uint32_t i = 0; i < outLen; i += blockBytesLen) {
-    memcpy(nc+ sizeof(nonce), ctr, sizeof(ctr));
+    memcpy(nc + sizeof(nonce), ctr, sizeof(ctr));
     EncryptBlock(nc, encryptedBlock, roundKeys);
     XorBlocks(alignIn + i, encryptedBlock, out + i, blockBytesLen);
     memcpy(ctr, IncrementCtr(ctr, sizeof(ctr)), sizeof(ctr));
@@ -319,16 +319,16 @@ uint8_t *AES::EncryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[], uint32_t &
 }
 
 uint8_t *AES::DecryptCTR(uint8_t in[], uint32_t inLen, uint8_t key[]) {
-  unsigned char nonce [] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-  unsigned char ctr [] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-  unsigned char nc[sizeof(nonce)+sizeof(ctr)];
-  memcpy(nc,nonce,sizeof(nonce));
+  unsigned char nonce[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+  unsigned char ctr[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  unsigned char nc[sizeof(nonce) + sizeof(ctr)];
+  memcpy(nc, nonce, sizeof(nonce));
   auto *out = new uint8_t[inLen];
   auto *encryptedBlock = new uint8_t[blockBytesLen];
   auto *roundKeys = new uint8_t[4 * Nb * (Nr + 1)];
   KeyExpansion(key, roundKeys);
   for (uint32_t i = 0; i < inLen; i += blockBytesLen) {
-    memcpy(nc+ sizeof(nonce),ctr, sizeof(ctr));
+    memcpy(nc + sizeof(nonce), ctr, sizeof(ctr));
     EncryptBlock(nc, encryptedBlock, roundKeys);
     XorBlocks(in + i, encryptedBlock, out + i, blockBytesLen);
     memcpy(ctr, IncrementCtr(ctr, sizeof(ctr)), sizeof(ctr));
