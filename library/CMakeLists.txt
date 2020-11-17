@@ -17,8 +17,8 @@ add_library(aes
         kupyna-helpers/tables.h
         src/rsa.cpp
         include/rsa.h
-        rsa-helpers/rsa-helpers.h
-        rsa-helpers/rsa-helpers.cpp
+        rsa-helpers/helpers.h
+        rsa-helpers/helpers.cpp
         )
 
 add_library(kalyna

@@ -331,7 +331,56 @@ int main() {
   GenerateData(kBytesInMegabyte);
   Measurement(kBytesInMegabyte);
 #if RUN_RSA
-  
+  mpz_t p, q, phi, e, n, d, dp, dq, c, dc;
+  char msg[40] = "welcome to cryptoworld";
+  int *mes;
+  int len = strlen(msg);
+  mpz_init(p);
+  mpz_init(q);
+  mpz_init(phi);
+  mpz_init(e);
+  mpz_init(n);
+  mpz_init(d);
+  mpz_init(dp);
+  mpz_init(dq);
+  mpz_init(c);
+  mpz_init(dc);
+
+  RSA rsa = RSA();
+  //rsa.Init( p, q, phi, n, d, e);
+  rsa.InitCRT( p, q, phi, n, d, dp, dq, e);
+  rsa.Encrypt(&e,&n, &d, &c, msg);
+  rsa.DecryptCRT(&dc, &c, &dp, &dq, &p, &q, &n);
+  //rsa.Decrypt(&dc, &c, &d, &n);
+
+  printf("\n------------------------------------------------------------------------------------------\n");
+  printf("encrypt message  = ");
+  mpz_out_str(stdout, 10, c);
+  printf("\n");
+  printf("\n------------------------------------------------------------------------------------------\n");
+  printf("message as int after decr  = ");
+  mpz_out_str(stdout, 10, dc);
+  printf("\n");
+
+  mpz_export(mes, (size_t*) malloc(sizeof (size_t)), 1, sizeof (mes[0]), 0, 0, dc);
+  char r[40];
+  printf("message as string after decr  = ");
+  for (int i = 0; i < len; i++) {
+    r[i] = (char) mes[i];
+    printf("%c", r[i]);
+  }
+  printf("\n");
+
+  mpz_clear(p);
+  mpz_clear(dp);
+  mpz_clear(q);
+  mpz_clear(dq);
+  mpz_clear(phi);
+  mpz_clear(n);
+  mpz_clear(e);
+  mpz_clear(c);
+  mpz_clear(d);
+  mpz_clear(dc);
 #endif // RSA
   return 0;
 }
