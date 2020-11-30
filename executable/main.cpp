@@ -13,10 +13,16 @@
 
 #include "rsa.h"
 #include "helpers.h"
+#include "ecc.h"
+#include "../ecc-helpers/gf2.h"
+#include "../library/ecc-helpers/curve.h"
 
-#define RUN_RSA 1
+#define RUN_CRYPTOSYSTEM 1
 #define RUN_CIPHER 0
 #define RUN_HASH 1
+
+#define RUN_ECC 0
+#define RUN_RSA 1
 
 #define RUN_AES 0
 #define RUN_KALYNA 0
@@ -31,6 +37,127 @@ const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(uint8_t);
 size_t const microseconds_in_a_second = 1000 * 1000;
 size_t constexpr test_runs = 1u << 3u;
 
+void RunECC(uint8_t input_data[], const int &kBytes)
+{
+  printf("\nStart ECC");
+  auto const &before_ecc = std::chrono::high_resolution_clock::now();
+  mpz_class A(1);
+  mpz_class B;
+  B.set_str("03CE10490F6A708F C26DF E8C3D27C4F94E690134D5BF F988D8D28AA\n"
+            "EAEDE975936C66BAC536B18AE2DC312CA493117DAA469C640CAF3", 16);
+  mpz_class m(431);
+  mpz_class n;
+  n.set_str("400000000000000000002BEC12BE2262D39BCF14D", 16);
+  std::vector<mpz_class> powers = {431, 5, 3, 1, 0};
+  EllipticCurve * elcurve = new EllipticCurve(A, B, m, GF::ConvertToFx(powers));
+  std::cout << "\nInitializing ECC ";
+  ECC ecc = ECC(A, B, m, n, elcurve);
+  std::cout<< "\nRunning ECC ";
+  std::tuple<unsigned char*, size_t, std::string> signature = ecc.Sign(input_data, kBytes);
+  bool verified = ecc.ValidateSignature(signature);
+  std::cout<<"verified:" << verified;
+
+  auto const &after_ecc = std::chrono::high_resolution_clock::now();
+  printf(
+      "ECC on %u bytes took %.6lfs\n",
+      kBytes,
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_ecc - before_ecc).count())
+          / static_cast<double>(test_runs * microseconds_in_a_second));
+  delete elcurve;
+}
+
+void Run_RSA (uint8_t input_data[], const int &kBytes)
+{
+  printf("Start RSA\n");
+  mpz_t p, q, phi, e, n, d, dp, dq, c, dc;
+  auto const& before_rsa = std::chrono::high_resolution_clock::now();
+
+  const char msg[40] = "welcome to cryptoworld";
+  int len = strlen(msg);
+
+  mpz_init(p);
+  mpz_init(q);
+  mpz_init(phi);
+  mpz_init(e);
+  mpz_init(n);
+  mpz_init(d);
+  mpz_init(dp);
+  mpz_init(dq);
+  mpz_init(c);
+  mpz_init(dc);
+
+  RSA rsa = RSA(128, 128);
+
+  //rsa.Init( p, q, phi, n, d, e);
+  rsa.InitCRT(p, q, phi, n, d, dp, dq, e);
+
+  //----------OAEP------------------------------------------
+  /*// make padding block be block
+  int NumOfBlocks = len / 16 + ((len % 16 == 0) ? 0 : 1);
+  std::string msgSTR(msg);
+  msgSTR.resize(NumOfBlocks * 16, (char) 0);
+  // make class
+  std::string Xarr[NumOfBlocks];
+  std::string Yarr[NumOfBlocks];
+  std::string Harr[NumOfBlocks];
+  std::string Garr[NumOfBlocks];
+
+  for (int i = 0; i < NumOfBlocks; i++) {
+    BlockPaddingOAEP(msgSTR.substr(i * 16, i * 16 + 15), Xarr[i], Yarr[i], Harr[i], Garr[i]);
+  }*/
+//______________________________________________________________________
+  rsa.Encrypt(&e, &n, &d, &c, msg);
+  rsa.DecryptCRT(&dc, &c, &dp, &dq, &p, &q, &n);
+  //rsa.Decrypt(&dc, &c, &d, &n);
+//_________________OAEPP_________________________________________________
+  //revert padding block be block
+  /*std::string RES = "";
+  for (int i = 0; i < NumOfBlocks; i++) {
+    std::string temp;
+    BlockDepaddingOAEP(temp, Xarr[i], Yarr[i], Harr[i], Garr[i]);
+    RES += temp;
+  }*/
+//________________________________________________________________________________
+  //printf("\n------------------------------------------------------------------------------------------\n");
+  //printf("encrypt message  = ");
+  //mpz_out_str(stdout, 10, c);
+  //printf("\n");
+  //printf("\n------------------------------------------------------------------------------------------\n");
+  printf("message as int after decr  = ");
+  mpz_out_str(stdout, 10, dc);
+  printf("\n");
+
+  // char *r = mpz_get_str(nullptr, 16, dc);
+  //printf("message as string after decr  = ");
+  // for (int i = 0; i < strlen(r); i++) {
+  // printf("%c", r[i]);
+  //}
+  printf("\n");
+  auto const &after_rsa = std::chrono::high_resolution_clock::now();
+
+  printf(
+      "RSA took %.6lfs\n",
+      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_rsa - before_rsa).count() )
+          / static_cast<double>(microseconds_in_a_second));
+
+  mpz_clear(p);
+  mpz_clear(dp);
+  mpz_clear(q);
+  mpz_clear(dq);
+  mpz_clear(phi);
+  mpz_clear(n);
+  mpz_clear(e);
+  mpz_clear(c);
+  mpz_clear(d);
+  mpz_clear(dc);
+}
+
+void Cryptosystems(uint8_t input_data[], const int &kBytes){
+#if RUN_RSA
+  Run_RSA(input_data, kBytes);
+#endif // RSA
+}
+
 void generate_messages_internal(int length, std::vector<uint8_t> &buffer, std::vector<std::vector<uint8_t>> &result) {
   if (buffer.size() == length) {
     result.push_back(buffer);
@@ -42,14 +169,12 @@ void generate_messages_internal(int length, std::vector<uint8_t> &buffer, std::v
     }
   }
 }
-
 std::vector<std::vector<uint8_t>> generate_messages(int length) {
   std::vector<std::vector<uint8_t>> result;
   std::vector<uint8_t> buffer;
   generate_messages_internal(length, buffer, result);
   return result;
 }
-
 std::string ProofOfWork(SHA256 &sha256, const int length, const uint8_t kZeroBytes) {
   std::string tail_bytes(kZeroBytes, '0');
   const auto messages = generate_messages(length);
@@ -102,6 +227,7 @@ uint8_t *ProofOfWork(Kupyna kupyna, const int length, const uint8_t kZeroBytes) 
   }
   return result;
 }
+
 void Hash_functions(uint8_t *input_data, const int &kBytes) {
 #if RUN_SHA256
   printf("Start SHA-256\n");
@@ -319,98 +445,17 @@ void Measurement(const int &kBytes = 1'000'000) {
   Hash_functions(input_data, kBytes);
 #endif // HASH
 
+#if RUN_CRYPTOSYSTEM
+ Cryptosystems(input_data,kBytes);
+#endif // DIGITAL SIGNING
   delete[] input_data;
 }
 
 int main() {
-  /*int kBytesInGigabyte = 1'000'000'000;
+  int kBytesInGigabyte = 1'000'000'000;
   int kBytesInMegabyte = 1'000'000;
   GenerateData(kBytesInMegabyte);
-  Measurement(kBytesInMegabyte);*/
-#if RUN_RSA
-  printf("Start RSA\n");
-  mpz_t p, q, phi, e, n, d, dp, dq, c, dc;
-  auto const& before_rsa = std::chrono::high_resolution_clock::now();
-
-  const char msg[40] = "welcome to cryptoworld";
-  int len = strlen(msg);
-
-  mpz_init(p);
-  mpz_init(q);
-  mpz_init(phi);
-  mpz_init(e);
-  mpz_init(n);
-  mpz_init(d);
-  mpz_init(dp);
-  mpz_init(dq);
-  mpz_init(c);
-  mpz_init(dc);
-
-  RSA rsa = RSA(128, 128);
-
-   //rsa.Init( p, q, phi, n, d, e);
-  rsa.InitCRT(p, q, phi, n, d, dp, dq, e);
-
-  //----------OAEP------------------------------------------
-  /*// make padding block be block
-  int NumOfBlocks = len / 16 + ((len % 16 == 0) ? 0 : 1);
-  std::string msgSTR(msg);
-  msgSTR.resize(NumOfBlocks * 16, (char) 0);
-  // make class
-  std::string Xarr[NumOfBlocks];
-  std::string Yarr[NumOfBlocks];
-  std::string Harr[NumOfBlocks];
-  std::string Garr[NumOfBlocks];
-
-  for (int i = 0; i < NumOfBlocks; i++) {
-    BlockPaddingOAEP(msgSTR.substr(i * 16, i * 16 + 15), Xarr[i], Yarr[i], Harr[i], Garr[i]);
-  }*/
-//______________________________________________________________________
-  rsa.Encrypt(&e, &n, &d, &c, msg);
-  rsa.DecryptCRT(&dc, &c, &dp, &dq, &p, &q, &n);
-  //rsa.Decrypt(&dc, &c, &d, &n);
-//_________________OAEPP_________________________________________________
-  //revert padding block be block
-  /*std::string RES = "";
-  for (int i = 0; i < NumOfBlocks; i++) {
-    std::string temp;
-    BlockDepaddingOAEP(temp, Xarr[i], Yarr[i], Harr[i], Garr[i]);
-    RES += temp;
-  }*/
-//________________________________________________________________________________
-  //printf("\n------------------------------------------------------------------------------------------\n");
-  //printf("encrypt message  = ");
-  //mpz_out_str(stdout, 10, c);
-  //printf("\n");
-  //printf("\n------------------------------------------------------------------------------------------\n");
-  printf("message as int after decr  = ");
-  mpz_out_str(stdout, 10, dc);
-  printf("\n");
-
- // char *r = mpz_get_str(nullptr, 16, dc);
-  //printf("message as string after decr  = ");
- // for (int i = 0; i < strlen(r); i++) {
-   // printf("%c", r[i]);
-  //}
-  printf("\n");
-  auto const &after_rsa = std::chrono::high_resolution_clock::now();
-
-  printf(
-      "RSA took %.6lfs\n",
-      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_rsa - before_rsa).count() )
-      / static_cast<double>(microseconds_in_a_second));
-
-  mpz_clear(p);
-  mpz_clear(dp);
-  mpz_clear(q);
-  mpz_clear(dq);
-  mpz_clear(phi);
-  mpz_clear(n);
-  mpz_clear(e);
-  mpz_clear(c);
-  mpz_clear(d);
-  mpz_clear(dc);
-#endif // RSA
+  Measurement(kBytesInMegabyte);
   exit(0);
-  return 0;
+  //return 0;
 }

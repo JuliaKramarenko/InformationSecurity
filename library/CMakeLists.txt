@@ -14,7 +14,7 @@ add_library(aes
         src/kupyna.cpp
         include/kupyna.h
         kupyna-helpers/tables.cpp
-        kupyna-helpers/tables.h)
+        kupyna-helpers/tables.h include/ecc.h src/ecc.cpp)
 
 add_library(rsa
         include/rsa.h
@@ -22,6 +22,10 @@ add_library(rsa
         rsa-helpers/helpers.h
         rsa-helpers/helpers.cpp
         )
+add_library(ecc
+        include/ecc.h
+        src/ecc.cpp
+        ecc-helpers/gf2.cpp ecc-helpers/gf2.h ecc-helpers/curve.cpp ecc-helpers/curve.h ecc-helpers/transformations.cpp ecc-helpers/transformations.h)
 
 add_library(kalyna
         kalyna-helpers/tables.h
@@ -46,8 +50,15 @@ target_include_directories(rsa PUBLIC
         $<INSTALL_INTERFACE:include>
         rsa-helpers
         PRIVATE src)
+target_include_directories(ecc PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        ecc-helpers
+        PRIVATE src)
+
 
 target_link_libraries(rsa gmp libgmp)
+target_link_libraries(ecc gmp libgmp)
 
 set_target_properties(aes kalyna rsa PROPERTIES
         CXX_STANDARD 17
