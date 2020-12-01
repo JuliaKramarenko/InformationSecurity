@@ -21,7 +21,7 @@
 #define RUN_CIPHER 0
 #define RUN_HASH 1
 
-#define RUN_ECC 0
+#define RUN_ECC 1
 #define RUN_RSA 1
 
 #define RUN_AES 0
@@ -43,11 +43,10 @@ void RunECC(uint8_t input_data[], const int &kBytes)
   auto const &before_ecc = std::chrono::high_resolution_clock::now();
   mpz_class A(1);
   mpz_class B;
-  B.set_str("03CE10490F6A708F C26DF E8C3D27C4F94E690134D5BF F988D8D28AA\n"
-            "EAEDE975936C66BAC536B18AE2DC312CA493117DAA469C640CAF3", 16);
+  B.set_str("03CE10490F6A708FC26DFE8C3D27C4F94E690134D5BFF988D8D28AAEAEDE975936C66BAC536B18AE2DC312CA493117DAA469C640CAF3", 16);
   mpz_class m(431);
   mpz_class n;
-  n.set_str("400000000000000000002BEC12BE2262D39BCF14D", 16);
+  n.set_str("3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBA3175458009A8C0A724F02F81AA8A1FCBAF80D90C7A95110504CF", 16);
   std::vector<mpz_class> powers = {431, 5, 3, 1, 0};
   EllipticCurve * elcurve = new EllipticCurve(A, B, m, GF::ConvertToFx(powers));
   std::cout << "\nInitializing ECC ";
@@ -156,6 +155,9 @@ void Cryptosystems(uint8_t input_data[], const int &kBytes){
 #if RUN_RSA
   Run_RSA(input_data, kBytes);
 #endif // RSA
+#if RUN_ECC
+  RunECC(input_data,kBytes);
+#endif // ECDSA
 }
 
 void generate_messages_internal(int length, std::vector<uint8_t> &buffer, std::vector<std::vector<uint8_t>> &result) {

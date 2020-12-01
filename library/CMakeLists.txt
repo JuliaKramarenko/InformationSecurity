@@ -25,7 +25,12 @@ add_library(rsa
 add_library(ecc
         include/ecc.h
         src/ecc.cpp
-        ecc-helpers/gf2.cpp ecc-helpers/gf2.h ecc-helpers/curve.cpp ecc-helpers/curve.h ecc-helpers/transformations.cpp ecc-helpers/transformations.h)
+        ecc-helpers/gf2.cpp
+        ecc-helpers/gf2.h
+        ecc-helpers/curve.cpp
+        ecc-helpers/curve.h
+        ecc-helpers/transformations.cpp
+        ecc-helpers/transformations.h)
 
 add_library(kalyna
         kalyna-helpers/tables.h
@@ -57,10 +62,9 @@ target_include_directories(ecc PUBLIC
         PRIVATE src)
 
 
-target_link_libraries(rsa gmp libgmp)
-target_link_libraries(ecc gmp libgmp)
+target_link_libraries(rsa ecc gmp gmpxx libgmp)
 
-set_target_properties(aes kalyna rsa PROPERTIES
+set_target_properties(aes kalyna rsa ecc PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS OFF)
