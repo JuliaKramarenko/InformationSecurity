@@ -2,6 +2,7 @@
 #include <iostream>
 #include "gf2.h"
 #include "transformations.h"
+#include "gmpxx.h"
 
 mpz_class GF::ConvertToFx(std::vector<mpz_class> powers){
   mpz_class result(0);
@@ -10,25 +11,26 @@ mpz_class GF::ConvertToFx(std::vector<mpz_class> powers){
 
   for(auto power : powers) {
     mpz_set(temp.get_mpz_t() , mpz_class(one<< power.get_ui()).get_mpz_t());
-    mpz_add(result.get_mpz_t(), result.get_mpz_t(), temp.get_mpz_t()); }
+    mpz_add(result.get_mpz_t(), result.get_mpz_t(), temp.get_mpz_t());
+  }
   return result;
 }
 
-mpz_class GF::M(mpz_class f) {
-  mpz_class one(1);
-  mpz_class res(0);
-  mpz_sub(res.get_mpz_t(), BitLength(f).get_mpz_t(), one.get_mpz_t() ); //BitLength(f) - 1
-  return res;
+unsigned int GF::M(mpz_class f) {
+  return BitLength(f) - 1;
 }
 
 mpz_class GF::Add(mpz_class a, mpz_class b){
-  return a ^ b;
+  return a^b;
 }
 
 mpz_class GF::Mult(mpz_class a, mpz_class b, mpz_class f){
-  mpz_class m(M(f));
+  unsigned int m(M(f));
+  assert(BitLength(a) <= m);
+  assert(BitLength(b) <= m);
+
   mpz_class one(1);
-  mpz_class mask((one << m.get_ui()) - one);
+  mpz_class mask((one << m) - 1);
   mpz_class p(0);
   while(a > 0 && b > 0)
   {
@@ -53,7 +55,16 @@ mpz_class GF::Div(mpz_class a, mpz_class b, mpz_class f){
 }
 
 mpz_class GF::ModPow(mpz_class a, mpz_class pow, mpz_class f){
-  std::string str_pow = IntToStr(pow);
+#if DEBUG
+  printf("\nModPow");
+    printf("\na = ");
+    mpz_out_str(stdout, 10, a.get_mpz_t());
+    printf("\n------------------------------------------------------------------------------------------\n");
+    printf("\npow = ");
+    mpz_out_str(stdout, 10, pow.get_mpz_t());
+    printf("\n------------------------------------------------------------------------------------------\n");
+#endif //DEBUG
+  std::string str_pow = IntToStr(pow);//pow.get_str(); // IntToStr(pow);
   mpz_class multiplier(a);
   mpz_class result(1);
   for (int i = str_pow.length() - 1;  i > -1; --i) {
@@ -62,7 +73,8 @@ mpz_class GF::ModPow(mpz_class a, mpz_class pow, mpz_class f){
     }
     mpz_set(multiplier.get_mpz_t(), Square(multiplier, f).get_mpz_t());
   }
- return result;
+
+  return result;
 }
 
 mpz_class GF::Square(mpz_class a, mpz_class f){
@@ -70,19 +82,17 @@ mpz_class GF::Square(mpz_class a, mpz_class f){
 }
 
 mpz_class GF::Sqrt(mpz_class a, mpz_class f){
-  mpz_class m(M(f));
-  mpz_class one(1);
-  mpz_class two(2);
-  return ModPow(a, two ^ (m - one), f);
+  unsigned int m(M(f));
+  mpz_class pow(0);
+  mpz_ui_pow_ui(pow.get_mpz_t(), 2, m - 1);
+  return ModPow(a, pow, f);
 }
 
 mpz_class GF::Inv(mpz_class a, mpz_class f){
-  mpz_class m(M(f));
-  mpz_class one(1);
-  mpz_class two(2);
-  mpz_class res(0);
-  mpz_set(res.get_mpz_t(), ModPow(a, two ^ m - two, f).get_mpz_t());
-  return ModPow(a, two ^ m - two, f);
+  unsigned int m(M(f));
+  mpz_class pow(0);
+  mpz_ui_pow_ui(pow.get_mpz_t(), 2, m);
+  return ModPow(a, pow - 2, f);
 }
 
 mpz_class GF::Trace(mpz_class x, mpz_class m, mpz_class f){
@@ -93,12 +103,12 @@ mpz_class GF::Trace(mpz_class x, mpz_class m, mpz_class f){
   return t;
 }
 
-mpz_class GF::HalfTrace(mpz_class x, mpz_class m, mpz_class f) {
+mpz_class GF::HalfTrace(mpz_class x, mpz_class m, mpz_class f){
   assert((m & 1) > 0);
-  mpz_class t = x;
-  mpz_class one(1);
-  mpz_class two(2);
-  for( mpz_class i; i < ((m - one) / two) + one; ++i);
-  t = Add(ModPow(t, 4, f), x);
+  mpz_class t (x);
+  mpz_class max(((m - 1) / 2) + 1);
+  for( mpz_class i = 1; i < max; ++i) {
+    mpz_set(t.get_mpz_t(), Add(ModPow(t, 4, f), x).get_mpz_t());
+  }
   return t;
 }

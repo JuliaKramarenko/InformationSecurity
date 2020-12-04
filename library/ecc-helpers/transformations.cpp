@@ -9,12 +9,9 @@ mpz_class StrToInt(std::string num) {
   return mpz_class(num, 2);
 }
 
-mpz_class BitLength(const mpz_class& number)
+unsigned int BitLength(const mpz_class& number)
 {
-  mpz_class bits(0), x;
-  mpz_init_set(x.get_mpz_t(), number.get_mpz_t());
-  mpz_set( x.get_mpz_t(), (x < 0)? mpz_class(-x).get_mpz_t() : x.get_mpz_t());
-  for(; x != 0 && bits < number.get_mpz_t()->_mp_size; bits++)
-    x >>= mpz_class(1).get_ui();
+  std::string numSTR = number.get_str(2);
+  unsigned int bits = numSTR.length();
   return bits;
 }

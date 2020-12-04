@@ -22,7 +22,7 @@
 #define RUN_HASH 1
 
 #define RUN_ECC 1
-#define RUN_RSA 1
+#define RUN_RSA 0
 
 #define RUN_AES 0
 #define RUN_KALYNA 0
@@ -39,30 +39,34 @@ size_t constexpr test_runs = 1u << 3u;
 
 void RunECC(uint8_t input_data[], const int &kBytes)
 {
-  printf("\nStart ECC");
-  auto const &before_ecc = std::chrono::high_resolution_clock::now();
-  mpz_class A(1);
-  mpz_class B;
-  B.set_str("03CE10490F6A708FC26DFE8C3D27C4F94E690134D5BFF988D8D28AAEAEDE975936C66BAC536B18AE2DC312CA493117DAA469C640CAF3", 16);
-  mpz_class m(431);
-  mpz_class n;
-  n.set_str("3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBA3175458009A8C0A724F02F81AA8A1FCBAF80D90C7A95110504CF", 16);
-  std::vector<mpz_class> powers = {431, 5, 3, 1, 0};
-  EllipticCurve * elcurve = new EllipticCurve(A, B, m, GF::ConvertToFx(powers));
-  std::cout << "\nInitializing ECC ";
-  ECC ecc = ECC(A, B, m, n, elcurve);
-  std::cout<< "\nRunning ECC ";
-  std::tuple<unsigned char*, size_t, std::string> signature = ecc.Sign(input_data, kBytes);
-  bool verified = ecc.ValidateSignature(signature);
-  std::cout<<"verified:" << verified;
+  try {
+    printf("\nStart ECC");
+    auto const &before_ecc = std::chrono::high_resolution_clock::now();
+    mpz_class A(1);
+    mpz_class B;
+    B.set_str("03CE10490F6A708FC26DFE8C3D27C4F94E690134D5BFF988D8D28AAEAEDE975936C66BAC536B18AE2DC312CA493117DAA469C640CAF3", 16);
+    unsigned int  m = 431;
+    mpz_class n;
+    n.set_str("3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBA3175458009A8C0A724F02F81AA8A1FCBAF80D90C7A95110504CF", 16);
+    std::vector<mpz_class> powers = {431, 5, 3, 1, 0};
+    std::cout << "\nInitializing ECC";
+    ECC ecc191 = ECC(A, B, m, n, powers);
+    std::cout<< "\nRunning ECC";
+    std::tuple<unsigned char*, size_t, std::string> signature = ecc191.Sign(input_data, kBytes);
+    bool verified = ecc191.ValidateSignature(signature);
+    std::cout<<"verified:" << verified;
 
-  auto const &after_ecc = std::chrono::high_resolution_clock::now();
-  printf(
-      "ECC on %u bytes took %.6lfs\n",
-      kBytes,
-      static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_ecc - before_ecc).count())
-          / static_cast<double>(test_runs * microseconds_in_a_second));
-  delete elcurve;
+    auto const &after_ecc = std::chrono::high_resolution_clock::now();
+    printf(
+        "ECC on %u bytes took %.6lfs\n",
+        kBytes,
+        static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(after_ecc - before_ecc).count())
+            / static_cast<double>(test_runs * microseconds_in_a_second));
+  }
+  catch( const std::exception &ex)
+  {
+    std::cout<<"\n"<< ex.what();
+  }
 }
 
 void Run_RSA (uint8_t input_data[], const int &kBytes)
